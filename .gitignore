@@ -1,0 +1,21 @@
+# VS user files
+*.suo
+*.user
+*.vspscc
+*.vssscc
+
+# bin, obj dirs
+*/bin/*
+*/*/bin/*
+*/obj/*
+*/*/obj/*
+
+# databases
+*.mdf
+*.ldf
+
+# NuGet
+packages/
+
+# Node Modules
+node_modules*/

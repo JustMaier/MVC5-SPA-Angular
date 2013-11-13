@@ -1,0 +1,21 @@
+﻿<script type="text/ng-template" id="/manage">
+    <div class="container" ng-controller="ManageCtrl">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3" ng-show="message == null">
+                <h2>Manage Account</h2>
+                <p>You are logged in as {{security.user.userName}}</p>
+                <button class="btn btn-default btn-block" ng-click="changePassword()" ng-hide="changingPassword">Change Password</button>
+                <form name="manageForm" ng-submit="updatePassword()" ng-show="changingPassword">
+                    <auto:fields fields="changePasswordSchema" data="changingPassword"></auto:fields>
+                    <div class="btn-group btn-group-justified">
+                        <a href="" class="btn btn-default" ng-class="{'btn-primary':manageForm.$valid}" tabindex="100" ng-click="updatePassword()">Save</a>
+                        <a href="" ng-click="cancel()" class="btn btn-default" tabindex="101">Cancel</a>
+                    </div>
+                </form>
+            </div>
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3" ng-hide="message == null">
+                <p class="lead" ng-bind="message"></p>
+            </div>
+        </div>
+    </div>
+</script>

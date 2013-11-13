@@ -1,0 +1,17 @@
+﻿<script type="text/ng-template" id="/join">
+    <div class="container" ng-controller="JoinCtrl">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3" ng-show="message == null">
+                <h2>Join</h2>
+                <form name="joinForm" ng-submit="join()">
+                    <auto:fields fields="schema" data="user"></auto:fields>
+                    <button type="submit" class="btn btn-default btn-lg btn-block" ng-class="{'btn-primary':joinForm.$valid}" tabindex="100">Join</button>
+                </form>
+                <p class="small text-muted gutter-top text-center">Already have an account? <a href="/login">Login Now!</a></p>
+            </div>
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3" ng-hide="message == null">
+                <p class="lead" ng-bind="message"></p>
+            </div>
+        </div>
+    </div>
+</script>
