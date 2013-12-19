@@ -8,13 +8,14 @@ using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
+using SPAuth.Models;
 
 namespace SPAuth.Providers {
 	public class ApplicationOAuthProvider : OAuthAuthorizationServerProvider {
 		private readonly string _publicClientId;
-		private readonly Func<UserManager<IdentityUser>> _userManagerFactory;
+		private readonly Func<UserManager<User>> _userManagerFactory;
 
-		public ApplicationOAuthProvider(string publicClientId, Func<UserManager<IdentityUser>> userManagerFactory) {
+		public ApplicationOAuthProvider(string publicClientId, Func<UserManager<User>> userManagerFactory) {
 			if (publicClientId == null) {
 				throw new ArgumentNullException("publicClientId");
 			}
@@ -28,8 +29,8 @@ namespace SPAuth.Providers {
 		}
 
 		public override async Task GrantResourceOwnerCredentials(OAuthGrantResourceOwnerCredentialsContext context) {
-			using (UserManager<IdentityUser> userManager = _userManagerFactory()) {
-				IdentityUser user = await userManager.FindAsync(context.UserName, context.Password);
+			using (UserManager<User> userManager = _userManagerFactory()) {
+				User user = await userManager.FindAsync(context.UserName, context.Password);
 
 				if (user == null) {
 					context.SetError("invalid_grant", "The user name or password is incorrect.");

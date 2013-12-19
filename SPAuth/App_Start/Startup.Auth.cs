@@ -8,13 +8,14 @@ using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
 using Owin;
 using SPAuth.Providers;
+using SPAuth.Models;
 
 namespace SPAuth {
 	public partial class Startup {
 		static Startup() {
 			PublicClientId = "self";
 
-			UserManagerFactory = () => new UserManager<IdentityUser>(new UserStore<IdentityUser>());
+			UserManagerFactory = () => new UserManager<User>(new UserStore<User>(new AppContext()));
 
 			OAuthOptions = new OAuthAuthorizationServerOptions {
 				TokenEndpointPath = new PathString("/Token"),
@@ -27,7 +28,7 @@ namespace SPAuth {
 
 		public static OAuthAuthorizationServerOptions OAuthOptions { get; private set; }
 
-		public static Func<UserManager<IdentityUser>> UserManagerFactory { get; set; }
+		public static Func<UserManager<User>> UserManagerFactory { get; set; }
 
 		public static string PublicClientId { get; private set; }
 
@@ -43,16 +44,16 @@ namespace SPAuth {
 
 			// Uncomment the following lines to enable logging in with third party login providers
 			//app.UseMicrosoftAccountAuthentication(
-			//    clientId: "",
-			//    clientSecret: "");
+			//	clientId: "",
+			//	clientSecret: "");
 
 			//app.UseTwitterAuthentication(
-			//    consumerKey: "",
-			//    consumerSecret: "");
+			//	consumerKey: "",
+			//	consumerSecret: "");
 
 			//app.UseFacebookAuthentication(
-			//    appId: "",
-			//    appSecret: "");
+			//	appId: "",
+			//	appSecret: "");
 
 			//app.UseGoogleAuthentication();
 		}

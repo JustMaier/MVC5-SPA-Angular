@@ -434,7 +434,7 @@ input[type="submit"].btn-block,input[type="reset"].btn-block,input[type="button"
 .collapse{display:none;}
 .collapse.in{display:block}
 .collapsing{position:relative;height:0;overflow:hidden;-webkit-transition:height .35s ease;transition:height .35s ease}
-@font-face{font-family:'Glyphicons Halflings';src:url("../fonts/glyphicons-halflings-regular.eot");src:url("../fonts/glyphicons-halflings-regular.eot?#iefix") format('embedded-opentype'),url("../fonts/glyphicons-halflings-regular.woff") format('woff'),url("../fonts/glyphicons-halflings-regular.ttf") format('truetype'),url("../fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular") format('svg')}
+@font-face{font-family:'Glyphicons Halflings';src:url("fonts/glyphicons-halflings-regular.eot");src:url("fonts/glyphicons-halflings-regular.eot?#iefix") format('embedded-opentype'),url("fonts/glyphicons-halflings-regular.woff") format('woff'),url("fonts/glyphicons-halflings-regular.ttf") format('truetype'),url("fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular") format('svg')}
 .glyphicon{position:relative;top:1px;display:inline-block;font-family:'Glyphicons Halflings';font-style:normal;font-weight:normal;line-height:1;-webkit-font-smoothing:antialiased}
 .glyphicon-asterisk:before{content:"\2a"}
 .glyphicon-plus:before{content:"\2b"}

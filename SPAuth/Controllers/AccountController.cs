@@ -27,13 +27,13 @@ namespace SPAuth.Controllers {
 			: this(Startup.UserManagerFactory(), Startup.OAuthOptions.AccessTokenFormat) {
 		}
 
-		public AccountController(UserManager<IdentityUser> userManager,
+		public AccountController(UserManager<User> userManager,
 			ISecureDataFormat<AuthenticationTicket> accessTokenFormat) {
 			UserManager = userManager;
 			AccessTokenFormat = accessTokenFormat;
 		}
 
-		public UserManager<IdentityUser> UserManager { get; private set; }
+		public UserManager<User> UserManager { get; private set; }
 		public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
 
 		// GET api/Account/UserInfo
@@ -59,7 +59,7 @@ namespace SPAuth.Controllers {
 		// GET api/Account/ManageInfo?returnUrl=%2F&generateState=true
 		[Route("ManageInfo")]
 		public async Task<ManageInfoViewModel> GetManageInfo(string returnUrl, bool generateState = false) {
-			IdentityUser user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+			User user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
 
 			if (user == null) {
 				return null;
@@ -209,7 +209,7 @@ namespace SPAuth.Controllers {
 				return new ChallengeResult(provider, this);
 			}
 
-			IdentityUser user = await UserManager.FindAsync(new UserLoginInfo(externalLogin.LoginProvider,
+			User user = await UserManager.FindAsync(new UserLoginInfo(externalLogin.LoginProvider,
 				externalLogin.ProviderKey));
 
 			bool hasRegistered = user != null;
@@ -273,7 +273,7 @@ namespace SPAuth.Controllers {
 				return BadRequest(ModelState);
 			}
 
-			IdentityUser user = new IdentityUser {
+			User user = new User {
 				UserName = model.UserName
 			};
 
@@ -302,7 +302,7 @@ namespace SPAuth.Controllers {
 				return InternalServerError();
 			}
 
-			IdentityUser user = new IdentityUser {
+			User user = new User {
 				UserName = model.UserName
 			};
 			user.Logins.Add(new IdentityUserLogin {

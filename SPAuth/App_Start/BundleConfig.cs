@@ -27,11 +27,11 @@ namespace SPAuth {
 
 			//App
 			bundles.Add(new ScriptBundle("~/bundles/app")
-				.IncludeDirectory("~/Scripts/App/", "*.js")
-				.IncludeDirectory("~/Scripts/App/Controllers", "*.js")
-				.IncludeDirectory("~/Scripts/App/Directives", "*.js")
-				.IncludeDirectory("~/Scripts/App/Filters", "*.js")
-				.IncludeDirectory("~/Scripts/App/Services", "*.js")
+				.IncludeDirectory("~/App/", "*.js")
+				.IncludeDirectory("~/App/Controllers", "*.js")
+				.IncludeDirectory("~/App/Directives", "*.js")
+				.IncludeDirectory("~/App/Filters", "*.js")
+				.IncludeDirectory("~/App/Services", "*.js")
 				);
 
 			// Use the development version of Modernizr to develop with and learn from. Then, when you're

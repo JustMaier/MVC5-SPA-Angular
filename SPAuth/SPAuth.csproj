@@ -194,19 +194,28 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\AccountBindingModels.cs" />
-    <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Migrations\201311141918237_Initial.cs" />
+    <Compile Include="Migrations\201311141918237_Initial.Designer.cs">
+      <DependentUpon>201311141918237_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\AppContext.cs" />
+    <Compile Include="Models\SecurityModels.cs" />
+    <Compile Include="Models\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Providers\ApplicationOAuthProvider.cs" />
-    <Compile Include="Results\ChallengeResult.cs" />
+    <Compile Include="Security\Providers\ApplicationOAuthProvider.cs" />
+    <Compile Include="Security\Results\ChallengeResult.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\css\bootstrap-theme.css" />
-    <Content Include="Content\css\bootstrap-theme.min.css" />
+    <Content Include="App\Controllers\RegisterExternalCtrl.js" />
+    <Content Include="App_Data\aspnet-SPAuth.mdf" />
+    <Content Include="App_Data\aspnet-SPAuth_log.ldf">
+      <DependentUpon>aspnet-SPAuth.mdf</DependentUpon>
+    </Content>
     <Content Include="Content\css\bootstrap.css" />
-    <Content Include="Content\css\bootstrap.min.css" />
     <Content Include="Content\css\Site.css" />
+    <Content Include="Content\stylus\Gruntfile.js" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\angular-animate.js" />
@@ -230,14 +239,14 @@
     <Content Include="Scripts\angular-touch.min.js" />
     <Content Include="Scripts\angular.js" />
     <Content Include="Scripts\angular.min.js" />
-    <Content Include="Scripts\App\app.js" />
-    <Content Include="Scripts\App\Controllers\HomeCtrl.js" />
-    <Content Include="Scripts\App\Controllers\JoinCtrl.js" />
-    <Content Include="Scripts\App\Controllers\LoginCtrl.js" />
-    <Content Include="Scripts\App\Controllers\ManageCtrl.js" />
-    <Content Include="Scripts\App\Directives\confirmPassword.js" />
-    <Content Include="Scripts\App\Services\Alert.js" />
-    <Content Include="Scripts\App\Services\ErrorHandler.js" />
+    <Content Include="App\app.js" />
+    <Content Include="App\Controllers\HomeCtrl.js" />
+    <Content Include="App\Controllers\JoinCtrl.js" />
+    <Content Include="App\Controllers\LoginCtrl.js" />
+    <Content Include="App\Controllers\ManageCtrl.js" />
+    <Content Include="App\Directives\confirmPassword.js" />
+    <Content Include="App\Services\Alert.js" />
+    <Content Include="App\Services\ErrorHandler.js" />
     <Content Include="Scripts\autoFields-bootstrap.js" />
     <Content Include="Scripts\autoFields-bootstrap.min.js" />
     <Content Include="Scripts\bootstrap.js" />
@@ -251,10 +260,53 @@
     <Content Include="Scripts\angular-cookies.min.js.map" />
     <Content Include="Scripts\angular-animate.min.js.map" />
     <Content Include="Scripts\angular.min.js.map" />
-    <Content Include="fonts\glyphicons-halflings-regular.woff" />
-    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
-    <Content Include="fonts\glyphicons-halflings-regular.svg" />
-    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="Content\css\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="Content\css\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="Content\css\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Content\css\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="Content\stylus\bootstrap\alerts.styl" />
+    <Content Include="Content\stylus\bootstrap\badges.styl" />
+    <Content Include="Content\stylus\bootstrap\bootstrap.styl" />
+    <Content Include="Content\stylus\bootstrap\breadcrumbs.styl" />
+    <Content Include="Content\stylus\bootstrap\button-groups.styl" />
+    <Content Include="Content\stylus\bootstrap\buttons.styl" />
+    <Content Include="Content\stylus\bootstrap\carousel.styl" />
+    <Content Include="Content\stylus\bootstrap\close.styl" />
+    <Content Include="Content\stylus\bootstrap\code.styl" />
+    <Content Include="Content\stylus\bootstrap\component-animations.styl" />
+    <Content Include="Content\stylus\bootstrap\dropdowns.styl" />
+    <Content Include="Content\stylus\bootstrap\forms.styl" />
+    <Content Include="Content\stylus\bootstrap\glyphicons.styl" />
+    <Content Include="Content\stylus\bootstrap\grid.styl" />
+    <Content Include="Content\stylus\bootstrap\input-groups.styl" />
+    <Content Include="Content\stylus\bootstrap\jumbotron.styl" />
+    <Content Include="Content\stylus\bootstrap\labels.styl" />
+    <Content Include="Content\stylus\bootstrap\list-group.styl" />
+    <Content Include="Content\stylus\bootstrap\media.styl" />
+    <Content Include="Content\stylus\bootstrap\mixins.styl" />
+    <Content Include="Content\stylus\bootstrap\modals.styl" />
+    <Content Include="Content\stylus\bootstrap\navbar.styl" />
+    <Content Include="Content\stylus\bootstrap\navs.styl" />
+    <Content Include="Content\stylus\bootstrap\normalize.styl" />
+    <Content Include="Content\stylus\bootstrap\pager.styl" />
+    <Content Include="Content\stylus\bootstrap\pagination.styl" />
+    <Content Include="Content\stylus\bootstrap\panels.styl" />
+    <Content Include="Content\stylus\bootstrap\popovers.styl" />
+    <Content Include="Content\stylus\bootstrap\print.styl" />
+    <Content Include="Content\stylus\bootstrap\progress-bars.styl" />
+    <Content Include="Content\stylus\bootstrap\responsive-utilities.styl" />
+    <Content Include="Content\stylus\bootstrap\scaffolding.styl" />
+    <Content Include="Content\stylus\bootstrap\tables.styl" />
+    <Content Include="Content\stylus\bootstrap\theme.styl" />
+    <Content Include="Content\stylus\bootstrap\thumbnails.styl" />
+    <Content Include="Content\stylus\bootstrap\tooltip.styl" />
+    <Content Include="Content\stylus\bootstrap\type.styl" />
+    <Content Include="Content\stylus\bootstrap\utilities.styl" />
+    <Content Include="Content\stylus\bootstrap\variables.styl" />
+    <Content Include="Content\stylus\bootstrap\wells.styl" />
+    <Content Include="Content\stylus\package.json" />
+    <Content Include="Content\stylus\site\style.styl" />
+    <Content Include="Content\stylus\watch.bat" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\i18n\angular-locale_af-na.js" />
     <Content Include="Scripts\i18n\angular-locale_af-za.js" />
@@ -533,12 +585,19 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="App_Data\" />
-    <Folder Include="Scripts\App\Filters\" />
+    <Folder Include="App\Filters\" />
+    <Folder Include="Content\img\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="packages.config" />
+    <Content Include="packages.config">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="Project_Readme.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201311141918237_Initial.resx">
+      <DependentUpon>201311141918237_Initial.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -558,11 +617,10 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>65489</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:65489/</IISUrl>
+          <IISUrl>http://spaAuth.localtest.me:65489</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
-          <CustomServerUrl>
-          </CustomServerUrl>
+          <CustomServerUrl>http://testing.justinmaier.com</CustomServerUrl>
           <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
         </WebProjectProperties>
       </FlavorProperties>
