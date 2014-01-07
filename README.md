@@ -21,3 +21,6 @@ Since most third party services don't support using localhost or 127.0.0.1 in th
     </bindings>
 </site>
 ```
+
+####Also check out
+[angular-spa-security](https://github.com/JustMaier/angular-spa-security) the primary component in this template.

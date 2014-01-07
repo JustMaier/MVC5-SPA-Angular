@@ -74,6 +74,7 @@
 	var securityProvider = this;
 	//Options
 	securityProvider.registerThenLogin = true;
+	securityProvider.usePopups = false;
 	securityProvider.urls = {
 		login: '/login',
 		registerExternal: '/registerExternal',
@@ -91,7 +92,6 @@
 
 	securityProvider.$get = ['security.api', '$q', '$http', '$location', '$timeout', function (Api, $q, $http, $location, $timeout) {
 		//Private Variables
-		var redirectTarget = null;
 		var externalLoginWindowTimer = null;
 
 		//Private Methods
@@ -139,11 +139,54 @@
 			}
 			return sessionStorage.accessToken || localStorage.accessToken;
 		};
+		var redirectTarget = function (newTarget) {
+			if (newTarget == 'clear') {
+				delete localStorage.redirectTarget;
+				return;
+			}
+			if (newTarget) localStorage.redirectTarget = newTarget;
+			return localStorage.redirectTarget;
+		};
+		var handleExternalData = function (external_data, provider) {
+			var deferred = $q.defer();
+
+			//Return if there was an error
+			if (external_data.error) {
+				deferred.reject({ message: external_data.error });
+			} else {
+				//Get user info and login or show external register screen
+				Api.getUserInfo(external_data.access_token).success(function (user) {
+					if (user.hasRegistered) {
+						accessToken(external_data.access_token);
+						Security.user = user;
+						Security.redirectAuthenticated(redirectTarget() || securityProvider.urls.home);
+						if (securityProvider.events.login) securityProvider.events.login(Security, user); // Your Login events
+						deferred.resolve(Security.user);
+					} else {
+						Security.externalUser = user;
+						Security.externalUser.access_token = external_data.access_token;
+						Security.externalUser.provider = provider;
+						$location.path(securityProvider.urls.registerExternal);
+						deferred.reject();
+					}
+				});
+			}
+
+			return deferred.promise;
+		}
 		var initialize = function () {
 			//Check for external access token from 3rd party auth
 			if ($location.path().indexOf('access_token') != -1) {
-				window.opener.external_data = parseQueryString($location.path().substring(1));
-				window.close();
+				var external_data = parseQueryString($location.path().substring(1));
+				$location.path('/');
+				if (window.opener) {
+					window.opener.external_data = external_data;
+					window.close();
+				} else {
+					var login = JSON.parse(localStorage.loginProvider);
+					delete localStorage.loginProvider;
+					handleExternalData(external_data, login);
+				}
 			}
 
 			//Check for access token and get user info
@@ -175,7 +218,7 @@
 			Api.login(data).success(function (user) {
 				accessToken(user.access_token, data.rememberMe);
 				Security.user = user;
-				Security.redirectAuthenticated(redirectTarget || securityProvider.urls.home);
+				Security.redirectAuthenticated(redirectTarget() || securityProvider.urls.home);
 				if (securityProvider.events.login) securityProvider.events.login(Security, user); // Your Login events
 				deferred.resolve(Security.user);
 			}).error(function (errorData) {
@@ -187,51 +230,35 @@
 
 		Security.loginWithExternal = function (login) {
 			var deferred = $q.defer();
-			var loginWindow = window.open(login.url, 'frame', 'resizeable,height=510,width=380');
+			if (securityProvider.usePopups) {
+				var loginWindow = window.open(login.url, 'frame', 'resizeable,height=510,width=380');
 
-			//Watch for close
-			$timeout.cancel(externalLoginWindowTimer);
-			externalLoginWindowTimer = $timeout(function closeWatcher() {
-				if (!loginWindow.closed) {
-					externalLoginWindowTimer = $timeout(closeWatcher, 500);
-					return;
-				}
-				//closeOAuthWindow handler - passes external_data if there is any
-				if (securityProvider.events.closeOAuthWindow) securityProvider.events.closeOAuthWindow(Security, window.external_data);
-
-				//Return if the window was closed and external data wasn't added
-				if (typeof (window.external_data) === 'undefined') {
-					deferred.reject();
-					return;
-				}
-
-				//Move external_data from global to local
-				var external_data = window.external_data;
-				delete window.external_data;
-
-				//Return if there was an error
-				if (external_data.error) {
-					deferred.reject({ message: external_data.error });
-					return;
-				}
-
-				//Get user info and login or show external register screen
-				Api.getUserInfo(external_data.access_token).success(function (user) {
-					if (user.hasRegistered) {
-						accessToken(external_data.access_token);
-						Security.user = user;
-						Security.redirectAuthenticated(redirectTarget || securityProvider.urls.home);
-						if (securityProvider.events.login) securityProvider.events.login(Security, user); // Your Login events
-						deferred.resolve(Security.user);
-					} else {
-						Security.externalUser = user;
-						Security.externalUser.access_token = external_data.access_token;
-						Security.externalUser.provider = login;
-						$location.path(securityProvider.urls.registerExternal);
-						deferred.reject();
+				//Watch for close
+				$timeout.cancel(externalLoginWindowTimer);
+				externalLoginWindowTimer = $timeout(function closeWatcher() {
+					if (!loginWindow.closed) {
+						externalLoginWindowTimer = $timeout(closeWatcher, 500);
+						return;
 					}
-				});
-			}, 500);
+					//closeOAuthWindow handler - passes external_data if there is any
+					if (securityProvider.events.closeOAuthWindow) securityProvider.events.closeOAuthWindow(Security, window.external_data);
+
+					//Return if the window was closed and external data wasn't added
+					if (typeof (window.external_data) === 'undefined') {
+						deferred.reject();
+						return;
+					}
+
+					//Move external_data from global to local
+					var external_data = window.external_data;
+					delete window.external_data;
+
+					deferred.resolve(handleExternalData(external_data, login));
+				}, 500);
+			} else {
+				localStorage.loginProvider = JSON.stringify(login);
+				window.location.href = login.url;
+			}
 
 			return deferred.promise;
 		};
@@ -242,7 +269,7 @@
 			Api.logout().success(function () {
 				Security.user = null;
 				accessToken('clear');
-				redirectTarget = null;
+				redirectTarget('clear');
 				if (securityProvider.events.login) securityProvider.events.logout(Security); // Your Logout events
 				$location.path(securityProvider.urls.postLogout);
 				deferred.resolve();
@@ -306,12 +333,13 @@
 
 		Security.authenticate = function () {
 			if (accessToken()) return;
-			redirectTarget = $location.path();
+			if(!redirectTarget())redirectTarget($location.path());
 			$location.path(securityProvider.urls.login);
 		};
 
 		Security.redirectAuthenticated = function (url) {
 			if (!accessToken()) return;
+			if(redirectTarget())redirectTarget('clear');
 			$location.path(url);
 		};
 
