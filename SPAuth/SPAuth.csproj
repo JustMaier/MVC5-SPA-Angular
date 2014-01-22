@@ -235,10 +235,6 @@
     <Content Include="Scripts\angular-scenario.js" />
     <Content Include="Scripts\angular-spa-security.js" />
     <Content Include="Scripts\angular-spa-security.min.js" />
-    <Content Include="Scripts\angular-touch.js" />
-    <Content Include="Scripts\angular-touch.min.js" />
-    <Content Include="Scripts\angular.js" />
-    <Content Include="Scripts\angular.min.js" />
     <Content Include="App\app.js" />
     <Content Include="App\Controllers\HomeCtrl.js" />
     <Content Include="App\Controllers\JoinCtrl.js" />
@@ -247,19 +243,12 @@
     <Content Include="App\Directives\confirmPassword.js" />
     <Content Include="App\Services\Alert.js" />
     <Content Include="App\Services\ErrorHandler.js" />
+    <Content Include="Scripts\angular-touch.js" />
+    <Content Include="Scripts\angular-touch.min.js" />
+    <Content Include="Scripts\angular.js" />
+    <Content Include="Scripts\angular.min.js" />
     <Content Include="Scripts\autoFields-bootstrap.js" />
     <Content Include="Scripts\autoFields-bootstrap.min.js" />
-    <Content Include="Scripts\bootstrap.js" />
-    <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="Scripts\errors.json" />
-    <Content Include="Scripts\angular-touch.min.js.map" />
-    <Content Include="Scripts\angular-sanitize.min.js.map" />
-    <Content Include="Scripts\angular-route.min.js.map" />
-    <Content Include="Scripts\angular-resource.min.js.map" />
-    <Content Include="Scripts\angular-loader.min.js.map" />
-    <Content Include="Scripts\angular-cookies.min.js.map" />
-    <Content Include="Scripts\angular-animate.min.js.map" />
-    <Content Include="Scripts\angular.min.js.map" />
     <Content Include="Content\css\fonts\glyphicons-halflings-regular.woff" />
     <Content Include="Content\css\fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="Content\css\fonts\glyphicons-halflings-regular.svg" />
@@ -307,7 +296,15 @@
     <Content Include="Content\stylus\package.json" />
     <Content Include="Content\stylus\site\style.styl" />
     <Content Include="Content\stylus\watch.bat" />
-    <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\errors.json" />
+    <Content Include="Scripts\angular-touch.min.js.map" />
+    <Content Include="Scripts\angular-sanitize.min.js.map" />
+    <Content Include="Scripts\angular-route.min.js.map" />
+    <Content Include="Scripts\angular-resource.min.js.map" />
+    <Content Include="Scripts\angular-loader.min.js.map" />
+    <Content Include="Scripts\angular-cookies.min.js.map" />
+    <Content Include="Scripts\angular-animate.min.js.map" />
+    <Content Include="Scripts\angular.min.js.map" />
     <Content Include="Scripts\i18n\angular-locale_af-na.js" />
     <Content Include="Scripts\i18n\angular-locale_af-za.js" />
     <Content Include="Scripts\i18n\angular-locale_af.js" />
@@ -553,13 +550,13 @@
     <Content Include="Scripts\i18n\angular-locale_zh.js" />
     <Content Include="Scripts\i18n\angular-locale_zu-za.js" />
     <Content Include="Scripts\i18n\angular-locale_zu.js" />
-    <Content Include="Scripts\jquery-1.10.2.js" />
-    <Content Include="Scripts\jquery-1.10.2.min.js" />
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
-    <Content Include="Scripts\ui-bootstrap-tpls-0.6.5.js" />
-    <Content Include="Scripts\ui-bootstrap-tpls-0.6.5.min.js" />
+    <Content Include="Scripts\ui-bootstrap-0.9.0.js" />
+    <Content Include="Scripts\ui-bootstrap-0.9.0.min.js" />
+    <Content Include="Scripts\ui-bootstrap-tpls-0.9.0.js" />
+    <Content Include="Scripts\ui-bootstrap-tpls-0.9.0.min.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Home\_Home.cshtml" />
@@ -582,7 +579,6 @@
     <Content Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
-    <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App\Filters\" />

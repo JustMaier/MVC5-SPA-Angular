@@ -8,9 +8,13 @@
                     <button type="submit" class="btn btn-default btn-lg btn-block" ng-class="{'btn-primary':loginForm.$valid}" tabindex="100">Login</button>
                 </form>
                 <p class="small text-muted gutter-top text-center">Don't have an account? <a href="/join">Register now!</a></p>
-                <hr />
-                <h4>Or Login With</h4>
-                <button class="btn btn-default" ng-repeat="login in security.externalLogins" ng-bind="login.name" ng-click="security.loginWithExternal(login)"></button>
+
+                <div class="externalLogins" ng-if="security.externalLogins.length > 0">
+                    <hr />
+                    <h4>Or Login With</h4>
+                    <button class="btn btn-default" ng-repeat="login in security.externalLogins" ng-bind="login.name" ng-click="security.loginWithExternal(login, user)"></button>
+                </div>
+
             </div>
             <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3" ng-show="message">
                 <p class="lead" ng-bind="message"></p>
