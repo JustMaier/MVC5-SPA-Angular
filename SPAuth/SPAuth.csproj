@@ -234,7 +234,6 @@
     <Content Include="Scripts\angular-sanitize.min.js" />
     <Content Include="Scripts\angular-scenario.js" />
     <Content Include="Scripts\angular-spa-security.js" />
-    <Content Include="Scripts\angular-spa-security.min.js" />
     <Content Include="App\app.js" />
     <Content Include="App\Controllers\HomeCtrl.js" />
     <Content Include="App\Controllers\JoinCtrl.js" />
@@ -243,6 +242,7 @@
     <Content Include="App\Directives\confirmPassword.js" />
     <Content Include="App\Services\Alert.js" />
     <Content Include="App\Services\ErrorHandler.js" />
+    <Content Include="Scripts\angular-spa-security.min.js" />
     <Content Include="Scripts\angular-touch.js" />
     <Content Include="Scripts\angular-touch.min.js" />
     <Content Include="Scripts\angular.js" />

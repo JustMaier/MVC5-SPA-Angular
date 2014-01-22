@@ -3,6 +3,10 @@ MVC5-SPA-Angular
 
 The MVC5 SPA Template Adapted for Angular
 
+##Installation
+
+Clone and start with the project **OR** run `MVC5-SPA-Angular.vsix` and install the project template!
+
 ##3rd Party Login Support
 
 Just update `App_Start/Startup.Auth.cs` with the correct information and you'll be on your way!
