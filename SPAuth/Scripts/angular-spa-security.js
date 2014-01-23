@@ -277,7 +277,7 @@
 				Security.user = null;
 				accessToken('clear');
 				redirectTarget('clear');
-				if (securityProvider.events.login) securityProvider.events.logout(Security); // Your Logout events
+				if (securityProvider.events.logout) securityProvider.events.logout(Security); // Your Logout events
 				$location.path(securityProvider.urls.postLogout);
 				deferred.resolve();
 			}).error(function (errorData) {

@@ -233,7 +233,6 @@
     <Content Include="Scripts\angular-sanitize.js" />
     <Content Include="Scripts\angular-sanitize.min.js" />
     <Content Include="Scripts\angular-scenario.js" />
-    <Content Include="Scripts\angular-spa-security.js" />
     <Content Include="App\app.js" />
     <Content Include="App\Controllers\HomeCtrl.js" />
     <Content Include="App\Controllers\JoinCtrl.js" />
@@ -242,6 +241,7 @@
     <Content Include="App\Directives\confirmPassword.js" />
     <Content Include="App\Services\Alert.js" />
     <Content Include="App\Services\ErrorHandler.js" />
+    <Content Include="Scripts\angular-spa-security.js" />
     <Content Include="Scripts\angular-spa-security.min.js" />
     <Content Include="Scripts\angular-touch.js" />
     <Content Include="Scripts\angular-touch.min.js" />
@@ -553,11 +553,11 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
-    <Content Include="Scripts\ui-bootstrap-0.9.0.js" />
-    <Content Include="Scripts\ui-bootstrap-0.9.0.min.js" />
-    <Content Include="Scripts\ui-bootstrap-tpls-0.9.0.js" />
-    <Content Include="Scripts\ui-bootstrap-tpls-0.9.0.min.js" />
     <Content Include="Scripts\_references.js" />
+    <Content Include="Scripts\ui-bootstrap-0.10.0.js" />
+    <Content Include="Scripts\ui-bootstrap-0.10.0.min.js" />
+    <Content Include="Scripts\ui-bootstrap-tpls-0.10.0.js" />
+    <Content Include="Scripts\ui-bootstrap-tpls-0.10.0.min.js" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Home\_Home.cshtml" />
     <Content Include="Views\Home\_Login.cshtml" />
