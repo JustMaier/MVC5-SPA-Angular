@@ -8,7 +8,7 @@ using System.Web;
 namespace SPAuth.Models {
 	public class AppContext : IdentityDbContext<User> {
 		public AppContext()
-			: base("DefaultConnection") {
+			: base("DefaultConnection", throwIfV1Schema: false) {
 		}
 
 		//Db Sets
