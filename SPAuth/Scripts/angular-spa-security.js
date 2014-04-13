@@ -1,13 +1,17 @@
 ﻿angular.module('security', [])
 .constant('security.urls', {
 	site: '/',
+	manage: '/manage',
 	join: '/api/account/register',
 	login: '/token',
 	logout: '/api/account/logout',
 	userInfo: '/api/account/userInfo',
 	changePassword: '/api/account/changePassword',
 	externalLogins: '/api/account/externalLogins',
-	registerExternal: '/api/account/registerExternal'
+	manageInfo: '/api/account/manageInfo',
+	registerExternal: '/api/account/registerExternal',
+	addExternalLogin: '/api/account/addExternalLogin',
+	removeLogin: '/api/account/removeLogin'
 })
 .factory('security.api', ['$http', 'security.urls', function ($http, Urls) {
 	//Parameterize - Necessary for funky login expectations...
@@ -63,8 +67,17 @@
 		getExternalLogins: function () {
 			return $http({ method: 'GET', url: Urls.externalLogins + '?returnUrl=' + encodeURIComponent(Urls.site)+'&generateState=true', isArray: true });
 		},
+		manageInfo: function () {
+			return $http({ method: 'GET', url: Urls.manageInfo + '?returnUrl=' + encodeURIComponent(Urls.site)+'&generateState=false' });
+		},
 		registerExternal: function (accessToken, data) {
 			return $http({ method: 'POST', url: Urls.registerExternal, data: data, headers: { 'Authorization': 'Bearer ' + accessToken } });
+		},
+		addExternalLogin: function (accessToken, externalAccessToken) {
+		    return $http({ method: 'POST', url: Urls.addExternalLogin, data: { externalAccessToken: externalAccessToken }, headers: { 'Authorization': 'Bearer ' + accessToken } });
+		},
+		removeLogin: function (data) {
+		    return $http({ method: 'POST', url: Urls.removeLogin, data: data });
 		}
 	};
 
@@ -139,6 +152,14 @@
 			}
 			return sessionStorage.accessToken || localStorage.accessToken;
 		};
+	    var associating = function(newValue) {
+	        if (newValue == 'clear') {
+	            delete localStorage.associating;
+	            return;
+	        }
+	        if (newValue) localStorage.associating = newValue;
+	        return localStorage.associating;
+	    };
 		var redirectTarget = function (newTarget) {
 			if (newTarget == 'clear') {
 				delete localStorage.redirectTarget;
@@ -150,27 +171,37 @@
 		var handleExternalData = function (external_data, provider, rememberMe) {
 			var deferred = $q.defer();
 
-			//Return if there was an error
+		    //Return if there was an error
 			if (external_data.error) {
 				deferred.reject({ message: external_data.error });
 			} else {
-				//Get user info and login or show external register screen
-				Api.getUserInfo(external_data.access_token).success(function (user) {
-					if (user.hasRegistered) {
-						accessToken(external_data.access_token, rememberMe);
-						Security.user = user;
-						Security.redirectAuthenticated(redirectTarget() || securityProvider.urls.home);
-						if (securityProvider.events.login) securityProvider.events.login(Security, user); // Your Login events
-						deferred.resolve(Security.user);
-					} else {
-						Security.externalUser = user;
-						Security.externalUser.access_token = external_data.access_token;
-						Security.externalUser.provider = provider;
-						if (rememberMe != null) localStorage.rememberMe = rememberMe;
-						$location.path(securityProvider.urls.registerExternal);
-						deferred.reject();
-					}
-				});
+
+			    if (accessToken() && associating()) {
+			        associating('clear');
+			        redirectTarget('clear');
+			        Api.addExternalLogin(accessToken(), external_data.access_token).success(function () {
+			            deferred.resolve();
+			        });
+			        
+			    } else {
+			        //Get user info and login or show external register screen
+			        Api.getUserInfo(external_data.access_token).success(function(user) {
+			            if (user.hasRegistered) {
+			                accessToken(external_data.access_token, rememberMe);
+			                Security.user = user;
+			                Security.redirectAuthenticated(redirectTarget() || securityProvider.urls.home);
+			                if (securityProvider.events.login) securityProvider.events.login(Security, user); // Your Login events
+			                deferred.resolve(Security.user);
+			            } else {
+			                Security.externalUser = user;
+			                Security.externalUser.access_token = external_data.access_token;
+			                Security.externalUser.provider = provider;
+			                if (rememberMe != null) localStorage.rememberMe = rememberMe;
+			                $location.path(securityProvider.urls.registerExternal);
+			                deferred.reject();
+			            }
+			        });
+			    }
 			}
 
 			return deferred.promise;
@@ -179,11 +210,14 @@
 			//Check for external access token from 3rd party auth
 			if ($location.path().indexOf('access_token') != -1) {
 				var external_data = parseQueryString($location.path().substring(1));
-				$location.path('/');
+				
 				if (window.opener) {
 					window.opener.external_data = external_data;
 					window.close();
 				} else {
+				    var url = redirectTarget();
+				    $location.path(url || securityProvider.urls.home);
+
 					var login = JSON.parse(localStorage.loginProvider);
 					var rememberMe = false;
 					if (localStorage.rememberMe) {
@@ -194,12 +228,13 @@
 					handleExternalData(external_data, login, rememberMe);
 				}
 			}
-
+			
 			//Check for access token and get user info
 			if (accessToken()) {
 				accessToken(accessToken());
 				Api.getUserInfo(accessToken()).success(function (user) {
-					Security.user = user;
+				    Security.user = user;
+
 					if (securityProvider.events.reloadUser) securityProvider.events.reloadUser(Security, user); // Your Register events
 				});
 			}
@@ -208,6 +243,8 @@
 			Api.getExternalLogins().success(function (logins) {
 				Security.externalLogins = logins;
 			});
+
+			
 		};
 
 		//Public Variables
@@ -326,6 +363,18 @@
 			return deferred.promise;
 		};
 
+	    Security.mangeInfo = function() {
+	        var deferred = $q.defer();
+
+	        Api.manageInfo().success(function (manageInfo) {
+	            deferred.resolve(manageInfo);
+	        }).error(function (errorData) {
+	            deferred.reject(errorData);
+	        });
+
+	        return deferred.promise;
+	    };
+
 		Security.changePassword = function (data) {
 			var deferred = $q.defer();
 
@@ -338,18 +387,78 @@
 			return deferred.promise;
 		};
 
+		Security.addExternalLogin = function (externalAccessToken, data) {
+			var deferred = $q.defer();
+
+		    Api.addExternalLogin(externalAccessToken, data).success(function () {
+				deferred.resolve();
+			}).error(function (errorData) {
+				deferred.reject(errorData);
+			});
+
+			return deferred.promise;
+		};
+
+		Security.associateExternal = function (login, returnUrl) {
+		    var deferred = $q.defer();
+		    if (securityProvider.usePopups) {
+		        var loginWindow = window.open(login.url, 'frame', 'resizeable,height=510,width=380');
+
+		        //Watch for close
+		        $timeout.cancel(externalLoginWindowTimer);
+		        externalLoginWindowTimer = $timeout(function closeWatcher() {
+		            if (!loginWindow.closed) {
+		                externalLoginWindowTimer = $timeout(closeWatcher, 500);
+		                return;
+		            }
+		            //closeOAuthWindow handler - passes external_data if there is any
+		            if (securityProvider.events.closeOAuthWindow) securityProvider.events.closeOAuthWindow(Security, window.external_data);
+
+		            //Return if the window was closed and external data wasn't added
+		            if (typeof (window.external_data) === 'undefined') {
+		                deferred.reject();
+		                return;
+		            }
+
+		            //Move external_data from global to local
+		            var external_data = window.external_data;
+		            delete window.external_data;
+
+		            deferred.resolve(handleExternalData(external_data, login, data.rememberMe));
+		        }, 500);
+		    } else {
+		        localStorage.loginProvider = JSON.stringify(login);
+		        associating(true);
+		        redirectTarget(returnUrl || "/");
+		        window.location.href = login.url;
+		    }
+
+		    return deferred.promise;
+		};
+
+		Security.removeLogin = function (data) {
+			var deferred = $q.defer();
+
+		    Api.removeLogin(data).success(function (result) {
+				deferred.resolve(result);
+			}).error(function (errorData) {
+				deferred.reject(errorData);
+			});
+
+			return deferred.promise;
+		};
+
 		Security.authenticate = function () {
-			if (accessToken()) return;
-			if(!redirectTarget())redirectTarget($location.path());
+		    if (accessToken()) return;
+            if(!redirectTarget())redirectTarget($location.path());
 			$location.path(securityProvider.urls.login);
 		};
 
 		Security.redirectAuthenticated = function (url) {
-			if (!accessToken()) return;
+		    if (!accessToken()) return;
 			if(redirectTarget())redirectTarget('clear');
 			$location.path(url);
 		};
-
 		// Initialize
 		initialize();
 

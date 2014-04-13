@@ -12,7 +12,21 @@
                         <a href="" ng-click="cancel()" class="btn btn-default" tabindex="101">Cancel</a>
                     </div>
                 </form>
+                <div class="externalLogins" ng-if="manageInfo.externalLoginProviders.length > 0">
+                    <hr />
+                    <h4>Manage Logins</h4>
+                    <div class="externalLogin" ng-repeat="login in manageInfo.externalLoginProviders" ng-init="userLogin = userLogin(login)">
+
+                        <button ng-class="{'disabled': userLogin.processing}" class="btn btn-default" ng-if="!userLogin" ng-disable="userLogin.processing" ng-click="associateExternal(login)">
+                            Add {{login.name}}
+                        </button>
+                        <button ng-class="{'disabled': userLogin.processing}" class="btn btn-default" ng-if="userLogin" ng-disable="userLogin.processing" ng-click="removeExternal(userLogin)">
+                            Remove {{login.name}}
+                        </button>
+                    </div>
+                </div>
             </div>
+            
             <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3" ng-hide="message == null">
                 <p class="lead" ng-bind="message"></p>
             </div>
