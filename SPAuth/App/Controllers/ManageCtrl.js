@@ -6,7 +6,7 @@
     var loadInfo = function () {
 
         Security.mangeInfo().then(function(data) {
-                $scope.manageInfo = data;
+        	$scope.manageInfo = data;
         }).finally(function () {
             $scope.message = null;
         });
@@ -50,7 +50,7 @@
 
     $scope.removeExternal = function (userLogin) {
         userLogin.processing = true;
-        Security.removeLogin(userLogin).success(function () { loadInfo(); });
+        Security.removeLogin(userLogin).then(function () { loadInfo(); });
     };
 
     $scope.userLogin = function (login) {

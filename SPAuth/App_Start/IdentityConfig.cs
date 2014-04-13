@@ -122,18 +122,18 @@ namespace SPAuth.Models {
 	}
 
 	public class EmailService : IIdentityMessageService {
-		public Task SendAsync(IdentityMessage message) {
+		public async Task SendAsync(IdentityMessage message) {
 			// Plug in your email service here to send an email.
-			MailMessage email = new MailMessage();
-			email.From = new MailAddress("just.maier@gmail.com");
-			email.To.Add(new MailAddress(message.Destination));
-			email.Subject = message.Subject;
-			email.Body = message.Body;
-			email.IsBodyHtml = true;
+			var email = new MailMessage {
+				Subject = message.Subject,
+				Body = message.Body,
+				IsBodyHtml = true
+			};
+			email.To.Add(message.Destination);
 
-			SmtpClient client = new SmtpClient();
-			client.Send(email);
-			return Task.FromResult(0);
+			using (var client = new SmtpClient()) {
+				await client.SendMailAsync(email);
+			}
 		}
 	}
 

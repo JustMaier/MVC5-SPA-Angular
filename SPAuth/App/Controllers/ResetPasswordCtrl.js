@@ -13,7 +13,6 @@
 	$scope.user = new User();
 	$scope.reset = function () {
 		if (!$scope.resetForm.$valid) return;
-		console.log($scope.user);
 		$scope.message = "Processing Request...";
 		$scope.user.code = $scope.app.params.code;
 		Security.resetPassword(angular.copy($scope.user)).then(function (data) {
