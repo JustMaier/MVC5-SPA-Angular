@@ -14,8 +14,14 @@ namespace SPAuth.Models {
 		//Db Sets
 		//public virtual DbSet<Partner> Partners { get; set; }
 
-		protected override void OnModelCreating(DbModelBuilder modelBuilder) {
-			base.OnModelCreating(modelBuilder);
-		}
+		static AppContext() {
+            // Set the database intializer which is run once during application start
+            // This seeds the database with admin user credentials and admin role
+			Database.SetInitializer<AppContext>(new ApplicationDbInitializer());
+        }
+
+		public static AppContext Create() {
+			return new AppContext();
+        }
 	}
 }

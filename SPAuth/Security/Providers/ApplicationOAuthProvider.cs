@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
@@ -13,39 +14,38 @@ using SPAuth.Models;
 namespace SPAuth.Providers {
 	public class ApplicationOAuthProvider : OAuthAuthorizationServerProvider {
 		private readonly string _publicClientId;
-		private readonly Func<UserManager<User>> _userManagerFactory;
 
-		public ApplicationOAuthProvider(string publicClientId, Func<UserManager<User>> userManagerFactory) {
+		public ApplicationOAuthProvider(string publicClientId) {
 			if (publicClientId == null) {
 				throw new ArgumentNullException("publicClientId");
 			}
-
-			if (userManagerFactory == null) {
-				throw new ArgumentNullException("userManagerFactory");
-			}
-
 			_publicClientId = publicClientId;
-			_userManagerFactory = userManagerFactory;
 		}
-
 		public override async Task GrantResourceOwnerCredentials(OAuthGrantResourceOwnerCredentialsContext context) {
-			using (UserManager<User> userManager = _userManagerFactory()) {
-				User user = await userManager.FindAsync(context.UserName, context.Password);
+			var userManager = context.OwinContext.GetUserManager<ApplicationUserManager>();
 
-				if (user == null) {
-					context.SetError("invalid_grant", "The user name or password is incorrect.");
-					return;
-				}
+			User user = await userManager.FindAsync(context.UserName, context.Password);
 
-				ClaimsIdentity oAuthIdentity = await userManager.CreateIdentityAsync(user,
-					context.Options.AuthenticationType);
-				ClaimsIdentity cookiesIdentity = await userManager.CreateIdentityAsync(user,
-					CookieAuthenticationDefaults.AuthenticationType);
-				AuthenticationProperties properties = CreateProperties(user.UserName);
-				AuthenticationTicket ticket = new AuthenticationTicket(oAuthIdentity, properties);
-				context.Validated(ticket);
-				context.Request.Context.Authentication.SignIn(cookiesIdentity);
+			if (user == null) {
+				context.SetError("invalid_grant", "The user name or password is incorrect.");
+				return;
 			}
+
+			if (await userManager.IsLockedOutAsync(user.Id)) {
+				context.SetError("lock_out", "The account is locked.");
+				return;
+			}
+
+			ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(userManager,
+			   context.Options.AuthenticationType);
+			ClaimsIdentity cookiesIdentity = await user.GenerateUserIdentityAsync(userManager,
+				DefaultAuthenticationTypes.ApplicationCookie);
+
+			AuthenticationProperties properties = CreateProperties(user);
+			AuthenticationTicket ticket = new AuthenticationTicket(oAuthIdentity, properties);
+			context.Validated(ticket);
+			context.Request.Context.Authentication.SignIn(cookiesIdentity);
+
 		}
 
 		public override Task TokenEndpoint(OAuthTokenEndpointContext context) {
@@ -77,12 +77,14 @@ namespace SPAuth.Providers {
 			return Task.FromResult<object>(null);
 		}
 
-		public static AuthenticationProperties CreateProperties(string userName) {
-			IDictionary<string, string> data = new Dictionary<string, string>
-            {
-                { "userName", userName }
+		public static AuthenticationProperties CreateProperties(User user, bool isPersistent = false) {
+			IDictionary<string, string> data = new Dictionary<string, string>{
+                { "userName", user.UserName }
             };
-			return new AuthenticationProperties(data);
+			var properties = new AuthenticationProperties(data);
+			properties.IsPersistent = isPersistent;
+			
+			return properties;
 		}
 	}
 }

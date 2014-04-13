@@ -10,42 +10,65 @@ using System.Web.Http;
 using System.Web.Http.ModelBinding;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
+using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
 using SPAuth.Models;
 using SPAuth.Providers;
-using SPAuth.Results;
+using SPAuth.Web;
+using System.Threading;
+using System.Net;
 
 namespace SPAuth.Controllers {
 	[Authorize]
 	[RoutePrefix("api/Account")]
 	public class AccountController : ApiController {
+
+		#region Base
 		private const string LocalLoginProvider = "Local";
-
-		public AccountController()
-			: this(Startup.UserManagerFactory(), Startup.OAuthOptions.AccessTokenFormat) {
-		}
-
-		public AccountController(UserManager<User> userManager,
-			ISecureDataFormat<AuthenticationTicket> accessTokenFormat) {
+		public AccountController() { }
+		public AccountController(ApplicationUserManager userManager) {
 			UserManager = userManager;
-			AccessTokenFormat = accessTokenFormat;
 		}
 
-		public UserManager<User> UserManager { get; private set; }
-		public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
+		private ApplicationUserManager _userManager;
+		public ApplicationUserManager UserManager {
+			get {
+				return _userManager ?? HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+			}
+			private set {
+				_userManager = value;
+			}
+		}
 
+		private SignInHelper _helper;
+		private SignInHelper SignInHelper {
+			get {
+				if (_helper == null) {
+					_helper = new SignInHelper(UserManager, Authentication);
+				}
+				return _helper;
+			}
+		}
+		#endregion
+
+		#region Login/Logout
 		// GET api/Account/UserInfo
 		[HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
 		[Route("UserInfo")]
-		public UserInfoViewModel GetUserInfo() {
-			ExternalLoginData externalLogin = ExternalLoginData.FromIdentity(User.Identity as ClaimsIdentity);
+		public async Task<UserInfoViewModel> GetUserInfo() {
+			User user = null;
+			var loginInfo = await Authentication.GetExternalLoginInfoAsync();
+			
+			if (loginInfo == null) {
+				user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+			}
 
 			return new UserInfoViewModel {
-				UserName = User.Identity.GetUserName(),
-				HasRegistered = externalLogin == null,
-				LoginProvider = externalLogin != null ? externalLogin.LoginProvider : null
+				UserName = user == null ? loginInfo.Email : user.UserName,
+				HasRegistered = loginInfo == null,
+				LoginProvider = loginInfo != null ? loginInfo.Login.LoginProvider : null
 			};
 		}
 
@@ -55,7 +78,49 @@ namespace SPAuth.Controllers {
 			Authentication.SignOut(CookieAuthenticationDefaults.AuthenticationType);
 			return Ok();
 		}
+		#endregion
 
+		#region Reset Password
+		// POST api/Account/ForgotPassword
+		[HttpPost]
+		[AllowAnonymous]
+		[Route("ForgotPassword")]
+		public async Task<IHttpActionResult> ForgotPassword(ForgotPasswordViewModel model) {
+			if (!ModelState.IsValid) return BadRequest(ModelState);
+
+			var user = await UserManager.FindByNameAsync(model.Email);
+			if (user == null) {
+				// Don't reveal that the user does not exist or is not confirmed
+				ModelState.AddModelError("", "That user does not exist");
+				return BadRequest(ModelState);
+			}
+
+			var code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
+			var callbackUrl = Utility.AbsoluteUrl("/ResetPassword?code="+HttpUtility.UrlEncode(code));
+			await UserManager.SendEmailAsync(user.Id, "Reset Password", "Please reset your password by clicking here: <a href=\"" + callbackUrl + "\">link</a>");
+			return Ok(new { message = "We've emailed you a link to reset your password!" });
+		}
+
+		//
+		// POST: /Account/ResetPassword
+		[HttpPost]
+		[AllowAnonymous]
+		[Route("ResetPassword")]
+		public async Task<IHttpActionResult> ResetPassword(ResetPasswordViewModel model) {
+			if (!ModelState.IsValid) return BadRequest(ModelState);
+			var user = await UserManager.FindByNameAsync(model.Email);
+
+			if (user != null) { 
+				var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.Password);
+				IHttpActionResult errorResult = GetErrorResult(result);
+				if (errorResult != null) return errorResult;
+			}
+			
+			return Ok(new { message = "Your Password has been reset." });
+		}
+		#endregion
+
+		#region Unused
 		// GET api/Account/ManageInfo?returnUrl=%2F&generateState=true
 		[Route("ManageInfo")]
 		public async Task<ManageInfoViewModel> GetManageInfo(string returnUrl, bool generateState = false) {
@@ -89,24 +154,6 @@ namespace SPAuth.Controllers {
 			};
 		}
 
-		// POST api/Account/ChangePassword
-		[Route("ChangePassword")]
-		public async Task<IHttpActionResult> ChangePassword(ChangePasswordBindingModel model) {
-			if (!ModelState.IsValid) {
-				return BadRequest(ModelState);
-			}
-
-			IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
-				model.NewPassword);
-			IHttpActionResult errorResult = GetErrorResult(result);
-
-			if (errorResult != null) {
-				return errorResult;
-			}
-
-			return Ok();
-		}
-
 		// POST api/Account/SetPassword
 		[Route("SetPassword")]
 		public async Task<IHttpActionResult> SetPassword(SetPasswordBindingModel model) {
@@ -133,7 +180,7 @@ namespace SPAuth.Controllers {
 
 			Authentication.SignOut(DefaultAuthenticationTypes.ExternalCookie);
 
-			AuthenticationTicket ticket = AccessTokenFormat.Unprotect(model.ExternalAccessToken);
+			AuthenticationTicket ticket = Startup.OAuthOptions.AccessTokenFormat.Unprotect(model.ExternalAccessToken);
 
 			if (ticket == null || ticket.Identity == null || (ticket.Properties != null
 				&& ticket.Properties.ExpiresUtc.HasValue
@@ -183,7 +230,30 @@ namespace SPAuth.Controllers {
 
 			return Ok();
 		}
+		#endregion
 
+		#region Manage Account
+		// POST api/Account/ChangePassword
+		[Route("ChangePassword")]
+		public async Task<IHttpActionResult> ChangePassword(ChangePasswordBindingModel model) {
+			if (!ModelState.IsValid) {
+				return BadRequest(ModelState);
+			}
+
+			IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
+				model.NewPassword);
+			IHttpActionResult errorResult = GetErrorResult(result);
+
+			if (errorResult != null) {
+				return errorResult;
+			}
+
+			return Ok();
+		}
+		#endregion
+
+		#region Third Party Auth
+		//
 		// GET api/Account/ExternalLogin
 		[OverrideAuthentication]
 		[HostAuthentication(DefaultAuthenticationTypes.ExternalCookie)]
@@ -198,37 +268,32 @@ namespace SPAuth.Controllers {
 				return new ChallengeResult(provider, this);
 			}
 
-			ExternalLoginData externalLogin = ExternalLoginData.FromIdentity(User.Identity as ClaimsIdentity);
-
-			if (externalLogin == null) {
+			var loginInfo = await Authentication.GetExternalLoginInfoAsync();
+			if (loginInfo == null) {
 				return InternalServerError();
 			}
 
-			if (externalLogin.LoginProvider != provider) {
+			if (loginInfo.Login.LoginProvider != provider) {
 				Authentication.SignOut(DefaultAuthenticationTypes.ExternalCookie);
 				return new ChallengeResult(provider, this);
 			}
 
-			User user = await UserManager.FindAsync(new UserLoginInfo(externalLogin.LoginProvider,
-				externalLogin.ProviderKey));
-
-			bool hasRegistered = user != null;
-
-			if (hasRegistered) {
-				Authentication.SignOut(DefaultAuthenticationTypes.ExternalCookie);
-				ClaimsIdentity oAuthIdentity = await UserManager.CreateIdentityAsync(user,
-					OAuthDefaults.AuthenticationType);
-				ClaimsIdentity cookieIdentity = await UserManager.CreateIdentityAsync(user,
-					CookieAuthenticationDefaults.AuthenticationType);
-				AuthenticationProperties properties = ApplicationOAuthProvider.CreateProperties(user.UserName);
-				Authentication.SignIn(properties, oAuthIdentity, cookieIdentity);
-			} else {
-				IEnumerable<Claim> claims = externalLogin.GetClaims();
-				ClaimsIdentity identity = new ClaimsIdentity(claims, OAuthDefaults.AuthenticationType);
-				Authentication.SignIn(identity);
+			// Sign in the user with this external login provider if the user already has a login
+			var result = await SignInHelper.ExternalSignIn(loginInfo, isPersistent: false);
+			switch (result) {
+				case SignInStatus.Success:
+					return Ok();
+				case SignInStatus.LockedOut:
+					return BadRequest("Your account has been locked");
+				case SignInStatus.RequiresTwoFactorAuthentication:
+					return Ok(new { twoFactor = true });
+				case SignInStatus.Failure:
+				default:
+					// If the user does not have an account, then prompt the user to create an account
+					ClaimsIdentity identity = new ClaimsIdentity(loginInfo.ExternalIdentity.Claims, OAuthDefaults.AuthenticationType);
+					Authentication.SignIn(identity);
+					return Ok(new { newLogin = true });
 			}
-
-			return Ok();
 		}
 
 		// GET api/Account/ExternalLogins?returnUrl=%2F&generateState=true
@@ -265,28 +330,6 @@ namespace SPAuth.Controllers {
 			return logins;
 		}
 
-		// POST api/Account/Register
-		[AllowAnonymous]
-		[Route("Register")]
-		public async Task<IHttpActionResult> Register(RegisterBindingModel model) {
-			if (!ModelState.IsValid) {
-				return BadRequest(ModelState);
-			}
-
-			User user = new User {
-				UserName = model.UserName
-			};
-
-			IdentityResult result = await UserManager.CreateAsync(user, model.Password);
-			IHttpActionResult errorResult = GetErrorResult(result);
-
-			if (errorResult != null) {
-				return errorResult;
-			}
-
-			return Ok();
-		}
-
 		// POST api/Account/RegisterExternal
 		[OverrideAuthentication]
 		[HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
@@ -296,39 +339,74 @@ namespace SPAuth.Controllers {
 				return BadRequest(ModelState);
 			}
 
-			ExternalLoginData externalLogin = ExternalLoginData.FromIdentity(User.Identity as ClaimsIdentity);
+			var info = await Authentication.GetExternalLoginInfoAsync();
+			if (info == null) {
+				return BadRequest("No third party auth token found");
+			}
+			var user = new User {
+				UserName = model.UserName,
+				Email = model.UserName
+			};
+			var result = await UserManager.CreateAsync(user);
 
-			if (externalLogin == null) {
-				return InternalServerError();
+			IHttpActionResult errorResult = GetErrorResult(result);
+			if (errorResult != null) return errorResult;
+
+			if (result.Succeeded) {
+				result = await UserManager.AddLoginAsync(user.Id, info.Login);
+
+				errorResult = GetErrorResult(result);
+				if (errorResult != null) return errorResult;
 			}
 
-			User user = new User {
-				UserName = model.UserName
-			};
-			user.Logins.Add(new IdentityUserLogin {
-				LoginProvider = externalLogin.LoginProvider,
-				ProviderKey = externalLogin.ProviderKey
-			});
-			IdentityResult result = await UserManager.CreateAsync(user);
-			IHttpActionResult errorResult = GetErrorResult(result);
+			return Ok();
+		}
+		#endregion
 
-			if (errorResult != null) {
-				return errorResult;
+		#region Register
+		// POST api/Account/Register
+		[AllowAnonymous]
+		[Route("Register")]
+		public async Task<IHttpActionResult> Register(RegisterBindingModel model) {
+			if (!ModelState.IsValid)  return BadRequest(ModelState);
+
+			User user = new User {
+				UserName = model.UserName,
+				Email = model.UserName
+			};
+
+			IdentityResult result = await UserManager.CreateAsync(user, model.Password);
+
+			IHttpActionResult errorResult = GetErrorResult(result);
+			if (errorResult != null) return errorResult;
+			
+			if (result.Succeeded) {
+				var code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
+				var callbackUrl = Utility.AbsoluteUrl(string.Format("/ConfirmEmail?code={0}&userId={1}",HttpUtility.UrlEncode(code),HttpUtility.UrlEncode(user.Id)));
+				await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking this link: <a href=\"" + callbackUrl + "\">link</a>");
 			}
 
 			return Ok();
 		}
 
-		protected override void Dispose(bool disposing) {
-			if (disposing) {
-				UserManager.Dispose();
-			}
+		//
+		// GET api/Account/ConfirmEmail
+		[AllowAnonymous]
+		[Route("ConfirmEmail")]
+		[HttpGet]
+		public async Task<IHttpActionResult> ConfirmEmail(string userId, string code) {
+			if (userId == null || code == null)  return BadRequest("Missing email confirmation token");
 
-			base.Dispose(disposing);
+			var result = await UserManager.ConfirmEmailAsync(userId, code);
+			IHttpActionResult errorResult = GetErrorResult(result);
+			if (errorResult != null) return errorResult;
+
+			return Ok(new { message = "Your email has been confirmed" });
 		}
 
-		#region Helpers
+		#endregion
 
+		#region Helpers
 		private IAuthenticationManager Authentication {
 			get { return Request.GetOwinContext().Authentication; }
 		}
@@ -354,6 +432,24 @@ namespace SPAuth.Controllers {
 			}
 
 			return null;
+		}
+
+		public class ChallengeResult : IHttpActionResult {
+			public ChallengeResult(string loginProvider, ApiController controller) {
+				LoginProvider = loginProvider;
+				Request = controller.Request;
+			}
+
+			public string LoginProvider { get; set; }
+			public HttpRequestMessage Request { get; set; }
+
+			public Task<HttpResponseMessage> ExecuteAsync(CancellationToken cancellationToken) {
+				Request.GetOwinContext().Authentication.Challenge(LoginProvider);
+
+				HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.Unauthorized);
+				response.RequestMessage = Request;
+				return Task.FromResult(response);
+			}
 		}
 
 		private class ExternalLoginData {
@@ -414,6 +510,13 @@ namespace SPAuth.Controllers {
 			}
 		}
 
+		protected override void Dispose(bool disposing) {
+			if (disposing) {
+				UserManager.Dispose();
+			}
+
+			base.Dispose(disposing);
+		}
 		#endregion
 	}
 }

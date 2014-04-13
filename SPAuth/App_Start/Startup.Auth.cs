@@ -12,34 +12,31 @@ using SPAuth.Models;
 
 namespace SPAuth {
 	public partial class Startup {
-		static Startup() {
-			PublicClientId = "self";
-
-			UserManagerFactory = () => new UserManager<User>(new UserStore<User>(new AppContext()));
-
-			OAuthOptions = new OAuthAuthorizationServerOptions {
-				TokenEndpointPath = new PathString("/Token"),
-				Provider = new ApplicationOAuthProvider(PublicClientId, UserManagerFactory),
-				AuthorizeEndpointPath = new PathString("/api/Account/ExternalLogin"),
-				AccessTokenExpireTimeSpan = TimeSpan.FromDays(14),
-				AllowInsecureHttp = true
-			};
-		}
-
 		public static OAuthAuthorizationServerOptions OAuthOptions { get; private set; }
-
-		public static Func<UserManager<User>> UserManagerFactory { get; set; }
 
 		public static string PublicClientId { get; private set; }
 
 		// For more information on configuring authentication, please visit http://go.microsoft.com/fwlink/?LinkId=301864
 		public void ConfigureAuth(IAppBuilder app) {
+			// Configure the db context, user manager and role manager to use a single instance per request
+			app.CreatePerOwinContext(AppContext.Create);
+			app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
+			app.CreatePerOwinContext<ApplicationRoleManager>(ApplicationRoleManager.Create);
+
 			// Enable the application to use a cookie to store information for the signed in user
 			// and to use a cookie to temporarily store information about a user logging in with a third party login provider
 			app.UseCookieAuthentication(new CookieAuthenticationOptions());
 			app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
 
 			// Enable the application to use bearer tokens to authenticate users
+			PublicClientId = "self";
+			OAuthOptions = new OAuthAuthorizationServerOptions {
+				TokenEndpointPath = new PathString("/Token"),
+				Provider = new ApplicationOAuthProvider(PublicClientId),
+				AuthorizeEndpointPath = new PathString("/api/Account/ExternalLogin"),
+				AccessTokenExpireTimeSpan = TimeSpan.FromDays(14),
+				AllowInsecureHttp = true
+			};
 			app.UseOAuthBearerTokens(OAuthOptions);
 
 			// Uncomment the following lines to enable logging in with third party login providers
@@ -55,7 +52,7 @@ namespace SPAuth {
 			//	appId: "",
 			//	appSecret: "");
 
-			//app.UseGoogleAuthentication();
+			app.UseGoogleAuthentication();
 		}
 	}
 }

@@ -17,6 +17,12 @@ namespace SPAuth {
 			);
 
 			routes.MapRoute(
+				name: "Short",
+				url: "{action}/{id}",
+				defaults: new { controller = "Home", action = "Index" }
+			);
+
+			routes.MapRoute(
 				name: "Default",
 				url: "{controller}/{action}/{id}",
 				defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }

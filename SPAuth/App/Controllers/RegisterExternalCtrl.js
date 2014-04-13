@@ -10,6 +10,6 @@
 		});
 	}
 	$scope.schema = [
-		{ property: 'userName', label: 'Username', type: 'text', attr: { ngMinlength: 4, required: true } }
+		{ property: 'userName', label: 'Email Address', type: 'email', attr: { required: true } }
 	];
 }]);

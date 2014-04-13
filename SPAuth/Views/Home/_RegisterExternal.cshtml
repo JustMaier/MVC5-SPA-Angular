@@ -6,7 +6,7 @@
                 <h4 ng-bind-template="Associate your {{security.externalUser.loginProvider}} account."></h4>
                 <p class="text-success">
                     You've successfully authenticated with <strong ng-bind="security.externalUser.loginProvider"></strong>.
-                    Please enter a user name for this site below and click the Register button to finish logging in.
+                    Please enter an email for this site below and click the Register button to finish logging in.
                 </p>
                 <form role="form" name="registerForm" ng-submit="registerExternalUser()">
                     <auto:fields fields="schema" data="security.externalUser"></auto:fields>

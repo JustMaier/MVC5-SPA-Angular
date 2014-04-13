@@ -18,7 +18,7 @@
 		});
 	}
 	$scope.schema = [
-		{ property: 'username', type: 'text', attr: { ngMinlength: 4, required: true } },
+		{ label: 'Email Address', property: 'username', type: 'email', attr: { required: true } },
 		{ property: 'password', type: 'password', attr: { required: true } },
 		{ property: 'rememberMe', label: 'Keep me logged in', type: 'checkbox' }
 	];

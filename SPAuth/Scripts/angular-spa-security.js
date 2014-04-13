@@ -4,6 +4,9 @@
 	join: '/api/account/register',
 	login: '/token',
 	logout: '/api/account/logout',
+	forgotPassword: '/api/account/forgotpassword',
+	resetPassword: '/api/account/resetpassword',
+	confirmEmail: '/api/account/confirmEmail',
 	userInfo: '/api/account/userInfo',
 	changePassword: '/api/account/changePassword',
 	externalLogins: '/api/account/externalLogins',
@@ -56,6 +59,15 @@
 		},
 		register: function (data) {
 			return $http({ method: 'POST', url: Urls.join, data: data });
+		},
+		forgotPassword: function (data) {
+			return $http({ method: 'POST', url: Urls.forgotPassword, data: data });
+		},
+		resetPassword: function (data) {
+			return $http({ method: 'POST', url: Urls.resetPassword, data: data });
+		},
+		confirmEmail: function (data) {
+			return $http({ method: 'GET', url: Urls.confirmEmail+'?code='+encodeURIComponent(data.code)+'&userId='+encodeURIComponent(data.userId) });
 		},
 		changePassword: function (data) {
 			return $http({ method: 'POST', url: Urls.changePassword, data: data });
@@ -326,6 +338,42 @@
 			return deferred.promise;
 		};
 
+		Security.forgotPassword = function (data) {
+			var deferred = $q.defer();
+
+			Api.forgotPassword(data).success(function (data) {
+				deferred.resolve(data);
+			}).error(function (errorData) {
+				deferred.reject(errorData);
+			});
+
+			return deferred.promise;
+		};
+
+		Security.resetPassword = function (data) {
+			var deferred = $q.defer();
+
+			Api.resetPassword(data).success(function (data) {
+				deferred.resolve(data);
+			}).error(function (errorData) {
+				deferred.reject(errorData);
+			});
+
+			return deferred.promise;
+		};
+
+		Security.confirmEmail = function (data) {
+			var deferred = $q.defer();
+
+			Api.confirmEmail(data).success(function (data) {
+				deferred.resolve(data);
+			}).error(function (errorData) {
+				deferred.reject(errorData);
+			});
+
+			return deferred.promise;
+		};
+
 		Security.changePassword = function (data) {
 			var deferred = $q.defer();
 
@@ -338,9 +386,10 @@
 			return deferred.promise;
 		};
 
-		Security.authenticate = function () {
+		Security.authenticate = function (url) {
 			if (accessToken()) return;
-			if(!redirectTarget())redirectTarget($location.path());
+			if (!redirectTarget()) redirectTarget($location.path());
+			if (url) redirectTarget(url);
 			$location.path(securityProvider.urls.login);
 		};
 
