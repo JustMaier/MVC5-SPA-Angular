@@ -4,7 +4,6 @@ angular.module('app')
 	var ErrorHandler = this;
 
 	ErrorHandler.handle = function (data, status, headers, config) {
-		console.log(data);
 		var message = [];
 		if (data.message) {
 			message.push("<strong>" + data.message + "</strong>");
