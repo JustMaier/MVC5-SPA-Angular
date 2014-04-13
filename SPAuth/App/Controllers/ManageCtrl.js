@@ -5,11 +5,8 @@
 
     var loadInfo = function () {
 
-        Security.mangeInfo().then(function (data) {
-            $scope.manageInfo = data;
-            console.log(data);
-        }, function (error) {
-            console.log(error);
+        Security.mangeInfo().then(function(data) {
+                $scope.manageInfo = data;
         }).finally(function () {
             $scope.message = null;
         });
@@ -48,14 +45,12 @@
     };
 
     $scope.associateExternal = function (login) {
-        Security.associateExternal(login, "/manage").then(function () {
-            console.log("added");
-        });
+        Security.associateExternal(login, "/manage");
     };
 
     $scope.removeExternal = function (userLogin) {
         userLogin.processing = true;
-        Security.removeLogin(userLogin).then(function (data) { console.log(data); }, function () { console.log(data); }).finally(function () { loadInfo(); });
+        Security.removeLogin(userLogin).success(function () { loadInfo(); });
     };
 
     $scope.userLogin = function (login) {
